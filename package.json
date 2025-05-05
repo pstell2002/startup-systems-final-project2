@@ -79,6 +79,9 @@
             "esbuild",
             "prisma",
             "sharp"
+        ],
+        "ignoredBuiltDependencies": [
+            "unrs-resolver"
         ]
     },
     "packageManager": "pnpm@10.6.5"
