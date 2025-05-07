@@ -1,1 +1,0 @@
-# startup-systems-final-project2

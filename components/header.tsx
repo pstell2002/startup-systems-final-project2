@@ -1,24 +1,35 @@
+"use client"
+
 import Link from "next/link"
 import { UserButton } from "@daveyplate/better-auth-ui"
 import { Button } from "./ui/button"
-import { AdminNavEntry } from "./AdminNavEntry"
+import { useRouter } from "next/navigation"
 
-export async function Header() {
+
+export function Header() {
+
+    const router = useRouter()
 
     return (
         <header className="sticky top-0 z-50 px-4 py-3 border-b bg-background/60 backdrop-blur">
             <div className="container mx-auto flex items-center justify-between">
                 <div className="flex items-center gap-4">
                     <Link href="/" className="flex items-center gap-2">
-                        CS 5356 – HW 6
+                        CS 5356 – Final Project
                     </Link>
-                    <nav className="flex items-center gap-2">
-                        <AdminNavEntry />
-                    </nav>
+                    <div className="flex gap-2">
+                      <Button variant="outline" onClick={() => router.push("/dashboard")}>
+                        Dashboard
+                      </Button>
+                      <Button variant="outline" onClick={() => router.push("/search")}>
+                        Search Movie
+                      </Button>
+                    </div>
                 </div>
-
                 <UserButton />
             </div>
         </header>
     )
 }
+
+
