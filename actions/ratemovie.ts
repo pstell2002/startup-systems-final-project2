@@ -19,6 +19,7 @@ export async function createRating(formData: FormData): Promise<ActionResponse> 
     return { error: "Not authenticated" };
   }
 
+  const id = formData.get("id")?.toString().trim(); // 🆕 from RatingModal
   const title = formData.get("title")?.toString().trim();
   const releaseYear = parseInt(formData.get("releaseYear")?.toString() || "", 10);
   const description = formData.get("description")?.toString().trim();
@@ -51,62 +52,79 @@ export async function createRating(formData: FormData): Promise<ActionResponse> 
     return { error: "Could not find or create movie" };
   }
 
-  // Check for existing rating by the user
-  const [existingRating] = await db
-    .select()
-    .from(ratings)
-    .where(
-      and(
-        eq(ratings.userId, session.user.id),
-        eq(ratings.movieId, movie.id)
-      )
-    );
-
-  if (existingRating) {
-    // Update existing rating and review
+  if (id) {
+    // 📝 Direct update using known rating ID
     await db
       .update(ratings)
       .set({
         rating: ratingValue,
         review: review || null,
       })
-      .where(eq(ratings.id, existingRating.id));
+      .where(
+        and(
+          eq(ratings.id, id),
+          eq(ratings.userId, session.user.id)
+        )
+      );
   } else {
-    // Insert new rating
-    await db.insert(ratings).values({
-      userId: session.user.id,
-      movieId: movie.id,
-      rating: ratingValue,
-      review: review || null,
-    });
-  }
+    // 🔍 Check if rating already exists for this user/movie combo
+    const [existingRating] = await db
+      .select()
+      .from(ratings)
+      .where(
+        and(
+          eq(ratings.userId, session.user.id),
+          eq(ratings.movieId, movie.id)
+        )
+      );
 
-  revalidatePath("/dashboard"); // update your path if needed
+    if (existingRating) {
+      await db
+        .update(ratings)
+        .set({
+          rating: ratingValue,
+          review: review || null,
+        })
+        .where(eq(ratings.id, existingRating.id));
+    } else {
+      // ➕ Create new rating
+      await db.insert(ratings).values({
+        userId: session.user.id,
+        movieId: movie.id,
+        rating: ratingValue,
+        review: review || null,
+      });
+    }
+  }
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
-export async function deleteRating(formData: FormData): Promise<void> {
-    const session = await auth.api.getSession({ headers: await headers() });
-  
-    if (!session?.user) {
-      console.error("Not authenticated");
-      return;
-    }
-  
-    const id = formData.get("id") as string;
-    if (!id) {
-      console.error("Missing rating ID");
-      return;
-    }
-  
-    // Delete only if rating belongs to the current user
-    await db.delete(ratings).where(
+export async function deleteRating(formData: FormData): Promise<ActionResponse> {
+  const session = await auth.api.getSession({ headers: await headers() });
+
+  if (!session?.user) {
+    return { error: "Not authenticated" };
+  }
+
+  const ratingId = formData.get("id")?.toString();
+  if (!ratingId) {
+    return { error: "Missing rating ID" };
+  }
+
+  const deleted = await db
+    .delete(ratings)
+    .where(
       and(
-        eq(ratings.id, id),
+        eq(ratings.id, ratingId),
         eq(ratings.userId, session.user.id)
       )
     );
-  
-    revalidatePath("/dashboard"); // Adjust path as needed
-  }
-  
+
+  revalidatePath("/dashboard");
+
+  return { success: true };
+}
+
+
+

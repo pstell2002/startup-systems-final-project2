@@ -1,15 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 type RatingModalProps = {
   movie: any;
   onClose: () => void;
   createRating: (formData: FormData) => Promise<any>;
+  existingRating?: {
+    rating: number;
+    review: string;
+    ratingId: string;
+  };
 };
 
-export default function RatingModal({ movie, onClose, createRating }: RatingModalProps) {
+export default function RatingModal({ movie, onClose, createRating, existingRating }: RatingModalProps) {
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [hoverRating, setHoverRating] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (existingRating?.rating) {
+      setSelectedRating(existingRating.rating);
+    }
+  }, [existingRating]);
 
   const handleStarClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, index: number) => {
     const { left, width } = event.currentTarget.getBoundingClientRect();
@@ -41,7 +52,7 @@ export default function RatingModal({ movie, onClose, createRating }: RatingModa
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-        ></motion.div>
+        />
 
         {/* Modal content */}
         <motion.div
@@ -58,7 +69,9 @@ export default function RatingModal({ movie, onClose, createRating }: RatingModa
             ✕
           </button>
 
-          <h2 className="text-lg font-semibold mb-4">Rate: {movie.title}</h2>
+          <h2 className="text-lg font-semibold mb-4">
+            {existingRating ? "Edit Rating" : "Rate"}: {movie.title}
+          </h2>
 
           <form
             action={createRating}
@@ -69,14 +82,15 @@ export default function RatingModal({ movie, onClose, createRating }: RatingModa
             <input
               type="hidden"
               name="releaseYear"
-              value={movie.release_date?.slice(0, 4)}
+              value={movie.release_year ? movie.release_year.slice(0, 4) : ""}
             />
             <input type="hidden" name="description" value={movie.overview} />
             <input type="hidden" name="rating" value={selectedRating ?? ""} />
+            <input type="hidden" name="id" value={existingRating?.ratingId ?? ""} />
 
             <div>
               <label className="text-sm block mb-1">Rating (0.5–7):</label>
-              <div className="flex gap-8">
+              <div className="flex gap-2">
                 {[...Array(7)].map((_, index) => {
                   const ratingToShow = hoverRating ?? selectedRating ?? 0;
                   const full = index + 1 <= ratingToShow;
@@ -89,19 +103,19 @@ export default function RatingModal({ movie, onClose, createRating }: RatingModa
                       onMouseMove={(e) => handleStarHover(e, index)}
                       onMouseLeave={handleStarLeave}
                     >
-                      {/* Empty star base */}
+                      {/* Empty star */}
                       <span className="absolute left-0 top-0 w-full h-full text-2xl text-gray-300 select-none">
                         ★
                       </span>
 
-                      {/* Filled or half-filled overlay */}
+                      {/* Filled/half star */}
                       <span
-                        className={`absolute left-0 top-0 h-full text-2xl text-yellow-400 overflow-hidden select-none transition-all duration-200`}
+                        className="absolute left-0 top-0 h-full text-2xl text-yellow-400 overflow-hidden select-none transition-all duration-200"
                         style={{
                           width:
-                            (hoverRating ?? selectedRating ?? 0) >= index + 1
+                            ratingToShow >= index + 1
                               ? "100%"
-                              : (hoverRating ?? selectedRating ?? 0) === index + 0.5
+                              : ratingToShow === index + 0.5
                               ? "50%"
                               : "0%",
                         }}
@@ -118,6 +132,7 @@ export default function RatingModal({ movie, onClose, createRating }: RatingModa
               <label className="text-sm block mb-1">Review:</label>
               <textarea
                 name="review"
+                defaultValue={existingRating?.review || ""}
                 placeholder="Write a review (optional)..."
                 className="w-full border rounded px-2 py-1"
               />

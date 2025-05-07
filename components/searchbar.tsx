@@ -1,24 +1,23 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import RatingModal from "./RatingModal"; // ✅ adjust path as needed
 
 const TMDB_API_KEY = "d79f6711e3e6cc755748098dd4e4e007";
 const TMDB_SEARCH_URL = "https://api.themoviedb.org/3/search/movie";
 
+
 export default function SearchBar({
   createRating,
-  deleteRating,
 }: {
   createRating: (formData: FormData) => Promise<any>;
-  deleteRating: (formData: FormData) => Promise<void>;
 }) {
   const [selected, setSelected] = useState("Themes");
+  const [ratedMap, setRatedMap] = useState<Record<string, boolean>>({});
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<any[]>([]);
-  const [ratingInputs, setRatingInputs] = useState<{ [id: number]: string }>({});
-  const [reviewInputs, setReviewInputs] = useState<{ [id: number]: string }>({});
-
+  const [activeMovie, setActiveMovie] = useState<any | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,13 +35,31 @@ export default function SearchBar({
 
   const handleSearch = async () => {
     if (!query.trim()) return;
-
+  
     try {
+      // 1. Fetch from TMDB
       const res = await fetch(
         `${TMDB_SEARCH_URL}?query=${encodeURIComponent(query)}&api_key=${TMDB_API_KEY}`
       );
       const data = await res.json();
-      setResults(data.results || []);
+      const movies = data.results || [];
+      setResults(movies);
+  
+      // 2. Extract titles
+      const titles = movies.map((m: any) => m.title);
+  
+      // 3. Query your API for rated movies
+      const ratingRes = await fetch("/api/user-ratings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ titles }),
+      });
+  
+      if (ratingRes.ok) {
+        const rated = await ratingRes.json(); // [{ movieTitle: "Inception" }]
+        const map = Object.fromEntries(rated.map((r: any) => [r.movieTitle, true]));
+        setRatedMap(map);
+      }
     } catch (err) {
       console.error("Search failed:", err);
     }
@@ -56,7 +73,6 @@ export default function SearchBar({
             onClick={() => setOpen((prev) => !prev)}
             className="rounded border border-transparent py-1 px-1.5 text-center flex items-center text-sm transition-all text-slate-600"
           >
-            <span className="text-ellipsis overflow-hidden">{selected}</span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -72,24 +88,11 @@ export default function SearchBar({
               />
             </svg>
           </button>
-
           <div className="h-6 border-l border-slate-200 ml-1" />
-
           {open && (
             <div className="min-w-[150px] overflow-hidden absolute left-0 w-full mt-10 bg-white border border-slate-200 rounded-md shadow-lg z-10">
               <ul>
-                {["Themes", "Plugins", "Snippets"].map((item) => (
-                  <li
-                    key={item}
-                    className="px-4 py-2 text-slate-600 hover:bg-slate-50 text-sm cursor-pointer"
-                    onClick={() => {
-                      setSelected(item);
-                      setOpen(false);
-                    }}
-                  >
-                    {item}
-                  </li>
-                ))}
+                
               </ul>
             </div>
           )}
@@ -99,102 +102,59 @@ export default function SearchBar({
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-28 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow"
+          className="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-28 py-2 focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm"
           placeholder="Search movies..."
         />
 
         <button
           onClick={handleSearch}
-          className="absolute top-1 right-1 flex items-center rounded bg-slate-800 py-1 px-2.5 border border-transparent text-center text-sm text-white transition-all shadow-sm hover:shadow focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+          className="absolute top-1 right-1 flex items-center rounded bg-slate-800 py-1 px-2.5 text-white text-sm hover:bg-slate-700"
           type="button"
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 16 16"
-            fill="currentColor"
-            className="w-4 h-4 mr-1.5"
-          >
-            <path
-              fillRule="evenodd"
-              d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
-              clipRule="evenodd"
-            />
-          </svg>
           Search
         </button>
       </div>
 
-      {/* Display results */}
       {results.length > 0 && (
         <ul className="mt-4 text-sm text-slate-700 space-y-6">
           {results.map((movie) => (
-            <li key={movie.id} className="border-b pb-4">
-              <strong>{movie.title}</strong> ({movie.release_date?.slice(0, 4)})
-              <p className="text-xs text-slate-500 mb-2">{movie.overview}</p>
-
-              <form action={createRating} className="space-y-2">
-                <input type="hidden" name="title" value={movie.title} />
-                <input
-                  type="hidden"
-                  name="releaseYear"
-                  value={movie.release_date?.slice(0, 4)}
-                />
-                <input type="hidden" name="description" value={movie.overview} />
-
-                <div className="flex gap-2 items-center">
-                  <label className="text-sm">Rating (0–5):</label>
-                  <input
-                    type="number"
-                    name="rating"
-                    step="0.5"
-                    min="0"
-                    max="5"
-                    value={ratingInputs[movie.id] || ""}
-                    onChange={(e) =>
-                      setRatingInputs((prev) => ({
-                        ...prev,
-                        [movie.id]: e.target.value,
-                      }))
-                    }
-                    className="w-16 border rounded px-1 py-0.5 text-sm"
-                    required
-                  />
-                </div>
-
-                <textarea
-                  name="review"
-                  placeholder="Write a review (optional)..."
-                  value={reviewInputs[movie.id] || ""}
-                  onChange={(e) =>
-                    setReviewInputs((prev) => ({
-                      ...prev,
-                      [movie.id]: e.target.value,
-                    }))
-                  }
-                  className="w-full border rounded px-2 py-1 text-sm"
-                />
-
-                <button
-                  type="submit"
-                  className="mt-1 bg-blue-600 text-white px-3 py-1 text-sm rounded hover:bg-blue-700"
+            <li key={movie.id} className="border-b pb-4 flex gap-4">
+              <img
+                src={
+                  movie.poster_path
+                    ? `https://image.tmdb.org/t/p/w200${movie.poster_path}`
+                    : "https://via.placeholder.com/200x300?text=No+Image"
+                }
+                alt={movie.title}
+                className="w-24 h-auto rounded shadow-sm"
+              />
+              <div className="flex-1">
+                <a
+                  href={`/movies/${encodeURIComponent(movie.title)}`}
+                  className="text-blue-700 hover:underline font-semibold"
                 >
-                  Submit Rating
-                </button>
-              </form>
-
-              {/* You would ideally show this only if the rating exists */}
-              <form action={deleteRating} className="mt-1">
-                <input type="hidden" name="id" value={movie.id} />
+                  {movie.title}
+                </a>{" "}
+                ({movie.release_date?.slice(0, 4)})
+                <p className="text-xs text-slate-500 mt-1">{movie.overview}</p>
                 <button
-                  type="submit"
-                  className="text-red-600 text-xs underline hover:text-red-800"
+                  onClick={() => setActiveMovie(movie)}
+                  className="mt-2 inline-block bg-blue-600 text-white px-3 py-1 text-sm rounded hover:bg-blue-700"
                 >
-                  Delete Rating
+                  {ratedMap[movie.title] ? "Re-rate" : "Rate"}
                 </button>
-              </form>
+              </div>
             </li>
           ))}
         </ul>
+      )}
+
+      {activeMovie && (
+        <RatingModal
+          movie={activeMovie}
+          onClose={() => setActiveMovie(null)}
+          createRating={createRating}
+        />
       )}
     </div>
   );
