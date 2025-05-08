@@ -4,11 +4,14 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import DashboardClient from "../DashboardClient"; // 👈 New client wrapper
+import DashboardClient from "../DashboardClient";
 
 export default async function DashboardPage() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session?.user) redirect("/auth/sign-in");
+  console.log("session is", session);
+  if (!session?.user){
+    console.log("redirecting to auth sign in");
+    redirect("/auth/sign-in?reason=signin");}
 
   const userRatings = await db
     .select({
