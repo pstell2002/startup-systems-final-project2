@@ -18,6 +18,7 @@ export default async function DashboardPage() {
       id: ratings.id,
       title: movies.title,
       releaseYear: movies.releaseYear,
+      thumbnail: movies.thumbnail,
       description: movies.description,
       rating: ratings.rating,
       review: ratings.review,

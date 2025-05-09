@@ -30,18 +30,28 @@ export default function DashboardClient({ ratings }: { ratings: any[] }) {
                 transition={{ duration: 0.25 }}
                 className="border-b pb-4"
               >
-                <h2 className="text-xl font-semibold">{entry.title}</h2>
-                <p className="text-sm text-gray-500 mb-1">
-                  {entry.releaseYear || "Unknown Year"}
-                </p>
-                <p className="text-gray-700 mb-2">{entry.description}</p>
-                <p className="text-yellow-600 font-medium">★ {entry.rating} / 7</p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Rated on {new Date(entry.createdAt).toLocaleDateString()}
-                </p>
-                {entry.review && (
-                  <p className="text-sm text-gray-800 mt-2 italic">“{entry.review}”</p>
-                )}
+              <div className="flex gap-4">
+               {entry.thumbnail ? (
+                <img
+                  src={entry.thumbnail}
+                  alt={`${entry.title} poster`}
+                  className="w-[100px] h-[150px] rounded shadow-sm object-contain"
+                />) : (
+                <div className="w-[100px] h-[150px] bg-gray-300 rounded flex items-center justify-center text-gray-500 text-xs">
+                </div>)}
+                <div className="flex-1">
+                  <h2 className="text-xl font-semibold">{entry.title}</h2>
+                  <p className="text-sm text-gray-500 mb-1">
+                    {entry.releaseYear || "Unknown Year"}
+                  </p>
+                  <p className="text-gray-700 mb-2">{entry.description}</p>
+                  <p className="text-yellow-600 font-medium">★ {entry.rating} / 7</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Rated on {new Date(entry.createdAt).toLocaleDateString()}
+                  </p>
+                  {entry.review && (
+                    <p className="text-sm text-gray-800 mt-2 italic">“{entry.review}”</p>
+                  )}
 
                 <div className="flex gap-4 mt-2">
                   <button
@@ -87,6 +97,8 @@ export default function DashboardClient({ ratings }: { ratings: any[] }) {
                     </button>
                   )}
                 </div>
+              </div>
+            </div>
               </motion.li>
             ))}
           </AnimatePresence>
@@ -99,6 +111,7 @@ export default function DashboardClient({ ratings }: { ratings: any[] }) {
             title: activeRating.title,
             release_date: activeRating.releaseYear,
             overview: activeRating.description,
+            poster_path: activeRating.thumbnail || null,
           }}
           existingRating={{
             rating: activeRating.rating,
