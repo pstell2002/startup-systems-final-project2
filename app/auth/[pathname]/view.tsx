@@ -15,39 +15,42 @@ export function AuthView({ pathname }: { pathname: string }) {
 
   const { data: session, isPending } = authClient.useSession();
 
-  // ✅ Automatically redirect after sign-in
   useEffect(() => {
     if (!isPending && session?.user && pathname === "sign-in") {
       router.replace("/dashboard");
     }
   }, [isPending, session, router, pathname]);
 
-  // ✅ Automatically redirect after sign-out
   useEffect(() => {
     if (pathname === "sign-out") {
-      router.replace("/"); // redirect to home
+      router.replace("/"); 
     }
   }, [pathname, router]);
 
   return (
-    <main className="flex grow flex-col items-center justify-center gap-3 p-4">
+    <main className="min-h-screen flex items-center justify-center px-6 bg-white">
+    <div className="max-w-md w-full space-y-6 text-center">
       {reason === "signin" && (
-        <div className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded text-sm mb-4">
+        <div className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded text-sm">
           Please sign in to continue.
         </div>
       )}
 
-      <AuthCard pathname={pathname} />
+      <div className="flex justify-center">
+        <div className="w-full max-w-sm">
+          <AuthCard pathname={pathname} />
+        </div>
+      </div>
 
       <p
         className={cn(
           ["callback", "settings", "sign-out"].includes(pathname) && "hidden",
-          "text-muted-foreground text-xs"
+          "text-xs text-gray-500"
         )}
       >
         Powered by{" "}
         <Link
-          className="text-warning underline"
+          className="text-blue-600 underline hover:text-blue-800"
           href="https://better-auth.com"
           target="_blank"
         >
@@ -55,6 +58,7 @@ export function AuthView({ pathname }: { pathname: string }) {
         </Link>
         .
       </p>
-    </main>
+    </div>
+  </main>
   );
 }

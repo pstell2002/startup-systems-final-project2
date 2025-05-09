@@ -45,7 +45,6 @@ export default function RatingModal({ movie, onClose, createRating, existingRati
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-50 flex items-center justify-center">
-        {/* Blurred background */}
         <motion.div
           className="absolute inset-0 backdrop-blur-sm bg-black/10"
           onClick={onClose}
@@ -54,7 +53,6 @@ export default function RatingModal({ movie, onClose, createRating, existingRati
           exit={{ opacity: 0 }}
         />
 
-        {/* Modal content */}
         <motion.div
           className="relative bg-white rounded-lg shadow-xl p-6 w-full max-w-md z-50 text-black"
           initial={{ scale: 0.9, opacity: 0 }}

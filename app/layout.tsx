@@ -3,7 +3,14 @@ import "@/styles/globals.css"
 import { Header } from "@/components/header"
 import type { ReactNode } from "react"
 import { Providers } from "./providers"
+import { Inter } from "next/font/google"
 
+const inter = Inter({
+    subsets: ["latin"],
+    variable: "--font-inter",
+  });
+
+  
 export const metadata: Metadata = {
     title: "Better Auth Next.js Starter",
     description: "Better Auth Next.js Starter with Postgres, Drizzle, shadcn/ui and Tanstack Query"

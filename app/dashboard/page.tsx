@@ -28,5 +28,19 @@ export default async function DashboardPage() {
     .innerJoin(movies, eq(ratings.movieId, movies.id))
     .where(eq(ratings.userId, session.user.id));
 
-  return <DashboardClient ratings={userRatings} />;
+    return (
+      <main className="min-h-screen flex items-center justify-center px-6 bg-white">
+        <div className="max-w-4xl w-full text-center space-y-8">
+          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">
+            Your Dashboard
+          </h1>
+          <p className="text-gray-600 text-lg leading-relaxed">
+            View and manage your rated movies. Update your reviews anytime.
+          </p>
+          <div className="mt-6">
+            <DashboardClient ratings={userRatings} />
+          </div>
+        </div>
+      </main>
+    );
 }
