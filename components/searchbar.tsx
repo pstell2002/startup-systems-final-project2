@@ -138,7 +138,15 @@ export default function SearchBar({
                 ({movie.release_date?.slice(0, 4)})
                 <p className="text-xs text-slate-500 mt-1">{movie.overview}</p>
                 <button
-                  onClick={() => setActiveMovie(movie)}
+                  onClick={() =>
+                    setActiveMovie({
+                      ...movie,
+                      release_year: movie.release_date?.slice(0, 4),
+                      thumbnail: movie.poster_path
+                        ? `https://image.tmdb.org/t/p/w200${movie.poster_path}`
+                        : "",
+                    })
+                  }
                   className="mt-2 inline-block bg-blue-600 text-white px-3 py-1 text-sm rounded hover:bg-blue-700"
                 >
                   {ratedMap[movie.title] ? "Re-rate" : "Rate"}

@@ -11,6 +11,7 @@ export const movies = pgTable("movies", {
   title: text("title").notNull(),
   description: text("description"),
   releaseYear: integer("release_year"),
+  thumbnail: text("thumbnail"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -70,6 +71,7 @@ export const ratingsRelations = relations(ratings, ({ one }) => ({
 
 export const insertMovieSchema = createInsertSchema(movies, {
   title: (schema) => schema.nonempty("Title is required"),
+  thumbnail: (schema) => schema.url("Must be a valid URL").optional(),
 });
 export type NewMovie = z.infer<typeof insertMovieSchema>;
 

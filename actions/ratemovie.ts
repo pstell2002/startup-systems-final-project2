@@ -25,6 +25,8 @@ export async function createRating(formData: FormData): Promise<ActionResponse> 
   const description = formData.get("description")?.toString().trim();
   const ratingValue = parseFloat(formData.get("rating")?.toString() || "");
   const review = formData.get("review")?.toString().trim();
+  const thumbnail = formData.get("thumbnail")?.toString().trim();
+
 
   if (!title || isNaN(ratingValue)) {
     return { error: "Missing movie title or rating" };
@@ -44,6 +46,7 @@ export async function createRating(formData: FormData): Promise<ActionResponse> 
         title,
         releaseYear: isNaN(releaseYear) ? undefined : releaseYear,
         description: description || null,
+        thumbnail: thumbnail || null,
       })
       .returning();
   }

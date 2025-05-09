@@ -79,14 +79,11 @@ export default function RatingModal({ movie, onClose, createRating, existingRati
             onSubmit={() => onClose()}
           >
             <input type="hidden" name="title" value={movie.title} />
-            <input
-              type="hidden"
-              name="releaseYear"
-              value={movie.release_year ? movie.release_year.slice(0, 4) : ""}
-            />
+            <input type="hidden" name="releaseYear" value={movie.release_year ? movie.release_year.slice(0, 4) : ""} />
             <input type="hidden" name="description" value={movie.overview} />
             <input type="hidden" name="rating" value={selectedRating ?? ""} />
             <input type="hidden" name="id" value={existingRating?.ratingId ?? ""} />
+            <input type="hidden" name="thumbnail" value={ movie.poster_path? `https://image.tmdb.org/t/p/w200${movie.poster_path}`: ""}/>
 
             <div>
               <label className="text-sm block mb-1">Rating (0.5–7):</label>
