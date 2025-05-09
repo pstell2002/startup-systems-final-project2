@@ -28,15 +28,21 @@ export async function createRating(formData: FormData): Promise<ActionResponse> 
   const thumbnail = formData.get("thumbnail")?.toString().trim();
 
 
+
   if (!title || isNaN(ratingValue)) {
     return { error: "Missing movie title or rating" };
   }
+
+  const conditions = [eq(movies.title, title)];
+    if (!isNaN(releaseYear)) {
+      conditions.push(eq(movies.releaseYear, releaseYear));
+    }
 
   // Find or create movie
   let [movie] = await db
     .select()
     .from(movies)
-    .where(eq(movies.title, title))
+    .where(and( ...conditions))
     .limit(1);
 
   if (!movie) {
